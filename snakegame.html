@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game: Eat the Shoes!</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f9;
+    }
+
+    canvas {
+      border: 2px solid #000;
+      background-color: #fff;
+      margin-top: 20px;
+    }
+
+    h1 {
+      color: #2f2f2f;
+    }
+  </style>
+</head>
+<body>
+  <h1>Snake Game: Eat the Shoes!</h1>
+  <p id="compliment"></p> <!-- Compliment message -->
+  <canvas id="gameCanvas" width="600" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const scale = 20;
+    const rows = canvas.height / scale;
+    const columns = canvas.width / scale;
+
+    let snake;
+    let shoe;
+    let score = 0;
+
+    // Color options for background, snake, and shoes
+    const colors = {
+      snakeColors: ['#33CC33', '#FF5733', '#33A1FF', '#FFD700'],
+      shoeColors: ['#FF6347', '#8A2BE2', '#00FA9A', '#FF1493'],
+      backgroundColors: ['#f4f4f9', '#f0f8ff', '#ffebcd', '#e6e6fa']
+    };
+
+    // Compliments array
+    const compliments = [
+      "Your shoes are looking fabulous!",
+      "You're stepping up your game!",
+      "Keep going, you’re walking the walk!",
+      "Those shoes are giving you serious style points!",
+      "You're really going places with those shoes!",
+    ];
+
+    (function setup() {
+      snake = new Snake();
+      shoe = new Shoe();
+      window.setInterval(gameLoop, 100);
+    })();
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Update background color, snake color, and shoe color
+      const bgColor = randomColor(colors.backgroundColors);
+      const snakeColor = randomColor(colors.snakeColors);
+      const shoeColor = randomColor(colors.shoeColors);
+
+      canvas.style.backgroundColor = bgColor;
+      snake.setColor(snakeColor);
+      shoe.setColor(shoeColor);
+
+      snake.update();
+      snake.draw();
+      shoe.draw();
+
+      if (snake.eat(shoe)) {
+        shoe = new Shoe();
+        score++;
+
+        // Change the background and colors
+        document.querySelector("h1").innerText = "Snake Game: Eat the Shoes! Score: " + score;
+        document.getElementById('compliment').innerText = randomCompliment();
+      }
+
+      if (snake.checkCollision()) {
+        alert("Game Over! Your score: " + score);
+        score = 0;
+        snake = new Snake();
+        document.getElementById('compliment').innerText = "";
+      }
+    }
+
+    function randomColor(colorArray) {
+      return colorArray[Math.floor(Math.random() * colorArray.length)];
+    }
+
+    function randomCompliment() {
+      return compliments[Math.floor(Math.random() * compliments.length)];
+    }
+
+    function Snake() {
+      this.snakeArray = [{x: 5, y: 5}];
+      this.direction = "RIGHT";
+      this.color = "#33CC33";
+
+      this.update = function() {
+        let head = { ...this.snakeArray[0] };
+
+        if (this.direction === "RIGHT") head.x++;
+        if (this.direction === "LEFT") head.x--;
+        if (this.direction === "UP") head.y--;
+        if (this.direction === "DOWN") head.y++;
+
+        this.snakeArray.unshift(head);
+        this.snakeArray.pop();
+      };
+
+      this.draw = function() {
+        ctx.fillStyle = this.color;
+        for (let i = 0; i < this.snakeArray.length; i++) {
+          ctx.fillRect(this.snakeArray[i].x * scale, this.snakeArray[i].y * scale, scale, scale);
+        }
+      };
+
+      this.setColor = function(color) {
+        this.color = color;
+      };
+
+      this.changeDirection = function(event) {
+        if (event.keyCode === 37 && this.direction !== "RIGHT") this.direction = "LEFT";
+        if (event.keyCode === 38 && this.direction !== "DOWN") this.direction = "UP";
+        if (event.keyCode === 39 && this.direction !== "LEFT") this.direction = "RIGHT";
+        if (event.keyCode === 40 && this.direction !== "UP") this.direction = "DOWN";
+      };
+
+      this.eat = function(shoe) {
+        if (this.snakeArray[0].x === shoe.x && this.snakeArray[0].y === shoe.y) {
+          this.snakeArray.push({});  // Grow the snake
+          return true;
+        }
+        return false;
+      };
+
+      this.checkCollision = function() {
+        let head = this.snakeArray[0];
+        if (head.x < 0 || head.x >= columns || head.y < 0 || head.y >= rows) {
+          return true;
+        }
+
+        for (let i = 1; i < this.snakeArray.length; i++) {
+          if (this.snakeArray[i].x === head.x && this.snakeArray[i].y === head.y) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      document.addEventListener("keydown", this.changeDirection.bind(this));
+    }
+
+    function Shoe() {
+      this.x = Math.floor(Math.random() * columns);
+      this.y = Math.floor(Math.random() * rows);
+      this.color = "#FF6347";
+
+      this.draw = function() {
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x * scale, this.y * scale, scale, scale);
+      };
+
+      this.setColor = function(color) {
+        this.color = color;
+      };
+    }
+  </script>
+</body>
+</html>
